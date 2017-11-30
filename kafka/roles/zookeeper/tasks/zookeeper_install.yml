@@ -1,0 +1,103 @@
+---
+- name: add zookeeper group
+  group:
+    name: "{{ zookeeper_user }}"
+    state: present
+
+- name: add zookeeper user
+  user:
+    name: "{{ zookeeper_user }}"
+    shell: /sbin/nologin
+    groups: "{{ zookeeper_group }}"
+    append: yes
+
+- name: download zookeeper binary
+  unarchive:
+    remote_src: yes
+    src: "{{ zookeeper_tar_url }}"
+    dest: /opt
+  tags: download_zookeeper
+
+- name: zookeeper extra dir
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items: 
+    - /opt/zookeeper-{{ zookeeper_version }}/logs
+    - /opt/zookeeper-{{ zookeeper_version }}/data
+
+- name: set JAVA_HOME
+  lineinfile:
+    path: /opt/zookeeper-{{ zookeeper_version }}/bin/zkEnv.sh
+    regexp: '^export JAVA_HOME=/opt/jdk'
+    line: 'export JAVA_HOME=/opt/jdk'
+
+- name: set ZOOBINDIR
+  lineinfile:
+    path: /opt/zookeeper-{{ zookeeper_version }}/bin/zkEnv.sh
+    regexp: '^ZOOBINDIR'
+    line: 'ZOOBINDIR=/opt/zookeeper-{{ zookeeper_version }}/bin'
+
+- name: set ZOO_LOG_DIR'
+  lineinfile:
+    path: /opt/zookeeper-{{ zookeeper_version }}/bin/zkEnv.sh
+    regexp: '^export ZOO_LOG_DIR'
+    line: 'export ZOO_LOG_DIR=/opt/zookeeper-{{ zookeeper_version }}/logs'
+
+- name: set ZOOPIDFILE
+  lineinfile:
+    path: /opt/zookeeper-{{ zookeeper_version }}/bin/zkEnv.sh
+    regexp: '^export ZOOPIDFILE'
+    line: 'export ZOOPIDFILE=/opt/zookeeper-{{ zookeeper_version }}/zookeeper_server.pid'
+
+- name: extend limits
+  template: 
+    src: 99-zookeeper-nproc.conf.j2
+    dest: /etc/security/limits.d/99-zookeeper-nproc.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: zookeeper basedir mode
+  file:
+    path: /opt/zookeeper-{{ zookeeper_version }}
+    recurse: yes
+    owner: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_group }}"
+    mode: 0755
+
+- name: zookeeper init.d script
+  copy:
+    remote_src: yes
+    src: /opt/zookeeper-{{ zookeeper_version }}/src/packages/rpm/init.d/zookeeper
+    dest: /etc/rc.d/init.d # 直接写入/etc/init.d会报错, /etc/init.d是软链接
+    owner: root
+    group: root
+    mode: 0755
+
+- name: fix init.d script(zkEnv.sh)
+  lineinfile:
+    path: /etc/init.d/zookeeper
+    regexp: '^source /usr/libexec/zkEnv.sh'
+    line: 'source /opt/zookeeper-{{ zookeeper_version }}/bin/zkEnv.sh'
+
+- name: fix init.d script(zkServer.sh)
+  replace:
+    path: /etc/init.d/zookeeper
+    regexp: 'zkServer.sh'
+    replace: '/opt/zookeeper-{{ zookeeper_version }}/bin/zkServer.sh'
+
+- name: systemd daemon-reload
+  systemd:
+    daemon-reload: yes
+
+- name: zoo.cfg
+  template: 
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: '{{ zookeeper_user }}'
+    group: '{{ zookeeper_group }}'
+  notify: restart zookeeper
+  with_items:
+    - { src: 'zoo.cfg.j2', dest: '/opt/zookeeper-{{ zookeeper_version }}/conf/zoo.cfg' }
+    - { src: 'myid', dest: '/opt/zookeeper-{{ zookeeper_version }}/data/myid' }

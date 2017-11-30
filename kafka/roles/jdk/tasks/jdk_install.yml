@@ -1,0 +1,25 @@
+---
+- name: download jdk binary
+  unarchive:
+    remote_src: yes
+    src: "{{ jdk_tar_url }}"
+    dest: /opt
+  tags: download_jdk
+
+- name: rename jdk
+  file:
+    src: /opt/jdk1.8.0_92
+    dest: /opt/jdk
+    state: link
+
+- name: set JAVA_HOME
+  lineinfile:
+    path: /etc/profile
+    regexp: '^export JAVA_HOME='
+    line: 'export JAVA_HOME=/opt/jdk'
+
+- name: set PATH
+  lineinfile:
+    path: /etc/profile
+    regexp: '^export PATH='
+    line: 'export PATH=$JAVA_HOME/bin:$PATH'

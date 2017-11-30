@@ -1,0 +1,2 @@
+---
+- import_tasks: ntp_{{ install_or_uninstall }}.yml

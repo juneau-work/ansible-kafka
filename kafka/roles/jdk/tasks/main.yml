@@ -1,0 +1,2 @@
+---
+- import_tasks: jdk_{{ install_or_uninstall }}.yml

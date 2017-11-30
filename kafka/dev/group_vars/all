@@ -1,0 +1,18 @@
+---
+timezone: Asia/Shanghai
+domain_name: example.com
+ntp_server: 192.168.130.254
+
+centos7_yum_url: http://192.168.130.1/ftp/centos7
+jdk_tar_url: http://192.168.130.1/ftp/linux_soft/java/jdk-8u92-linux-x64.tar.gz
+
+zookeeper_version: 3.4.11
+zookeeper_tar_url: http://192.168.130.1/ftp/linux_soft/java/zookeeper-{{ zookeeper_version }}.tar.gz
+zookeeper_user: zookeeper
+zookeeper_group: zookeeper
+
+kafka_version: 2.12-1.0.0
+kafka_tar_url: http://192.168.130.1/ftp/linux_soft/java/kafka_{{ kafka_version }}.tgz
+kafka_user: kafka
+kafka_group: kafka
+zookeeper_cluster: 192.168.130.11:2181,192.168.130.12:2181,192.168.130.13:2181

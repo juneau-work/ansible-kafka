@@ -1,0 +1,20 @@
+---
+- name: remove jdk
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /opt/jdk
+    - /opt/jdk1.8.0_92
+
+- name: unset JAVA_HOME
+  lineinfile:
+    path: /etc/profile
+    regexp: '^export JAVA_HOME='
+    state: absent
+
+- name: unset PATH
+  lineinfile:
+    path: /etc/profile
+    regexp: '^export PATH='
+    state: absent

@@ -1,0 +1,22 @@
+broker.id={{ kafka_broker_id }}
+delete.topic.enable=true
+
+advertised.listeners=PLAINTEXT://localhost:9092
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+
+num.partitions=1
+num.recovery.threads.per.data.dir=1
+log.dirs=/opt/kafka_{{ kafka_version }}/logs
+log.flush.interval.messages=10000
+log.flush.interval.ms=1000
+log.retention.hours=168
+log.retention.bytes=1073741824
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+
+zookeeper.connect={{ zookeeper_cluster }}
+zookeeper.connection.timeout.ms=6000

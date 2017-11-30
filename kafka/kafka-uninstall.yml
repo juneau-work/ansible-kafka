@@ -1,0 +1,6 @@
+---
+- import_playbook: common.yml
+- import_playbook: ntp.yml
+- import_playbook: kafka.yml
+- import_playbook: zookeeper.yml
+- import_playbook: jdk.yml

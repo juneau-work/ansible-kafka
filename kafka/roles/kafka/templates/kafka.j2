@@ -1,0 +1,30 @@
+#!/bin/sh
+# chkconfig: 2345 20 80
+# description: Start and Stop KAFKA
+JAVA_HOME=/opt/jdk
+KAFKA_HOME=/opt/kafka_{{ kafka_version }}
+start() {
+    su - {{ kafka_user }} -c "$KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties"
+}
+stop() {
+    su - {{ kafka_user }} -c "$KAFKA_HOME/bin/kafka-server-stop.sh"
+}
+case "$1" in
+  'start')
+    # start KAFKA
+    start
+    ;;
+  'stop')
+    # Stop KAFKA
+    stop
+    ;;
+  'restart')
+    # Restart KAFKA
+    stop
+    start
+    ;;
+    *)
+    echo $"Usage: $0 {start|stop|restart}"
+    exit 2
+    ;;
+esac

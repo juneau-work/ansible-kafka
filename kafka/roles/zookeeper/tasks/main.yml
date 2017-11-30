@@ -1,0 +1,2 @@
+---
+- import_tasks: zookeeper_{{ install_or_uninstall }}.yml

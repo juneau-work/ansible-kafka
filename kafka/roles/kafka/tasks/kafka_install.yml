@@ -1,0 +1,68 @@
+---
+- name: add kafka group
+  group:
+    name: "{{ kafka_user }}"
+    state: present
+
+- name: add kafka user
+  user:
+    name: "{{ kafka_user }}"
+    shell: /bin/bash
+    groups: "{{ kafka_group }}"
+    append: yes
+
+- name: download kafka binary
+  unarchive:
+    remote_src: yes
+    src: "{{ kafka_tar_url }}"
+    dest: /opt
+  tags: download_kafka
+
+- name: kafka extra dir
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items: 
+    - /opt/kafka_{{ kafka_version }}/logs
+
+- name: extend limits
+  template: 
+    src: 99-kafka-nproc.conf.j2
+    dest: /etc/security/limits.d/99-kafka-nproc.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: KAFKA_HEAP_OPTS
+  replace:
+    path: /opt/kafka_{{ kafka_version }}/bin/kafka-server-start.sh
+    regexp: 'KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"'
+    replace: 'KAFKA_HEAP_OPTS="-Xmx2G -Xms1G"'
+
+- name: kafka basedir mode
+  file:
+    path: /opt/kafka_{{ kafka_version }}
+    recurse: yes
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_group }}"
+    mode: 0755
+
+- name: kafka init script
+  template:
+    src: kafka.j2
+    dest: /etc/rc.d/init.d/kafka
+    owner: root
+    group: root
+    mode: 0755
+
+- name: systemd daemon-reload
+  systemd:
+    daemon-reload: yes
+
+- name: kafka server.properties
+  template: 
+    src: server.properties.j2
+    dest: /opt/kafka_{{ kafka_version }}/config/server.properties
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_group }}"
+  notify: restart kafka

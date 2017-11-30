@@ -1,0 +1,27 @@
+---
+- name: stop kafka
+  service: 
+    name: kafka
+    state: stopped 
+    enabled: no
+  ignore_errors: true
+
+- name: remove kafka user
+  user:
+    name: "{{ kafka_user }}"
+    state: absent
+    force: yes
+
+- name: remove kafka group
+  group:
+    name: "{{ kafka_group }}"
+    state: absent
+
+- name: remove kafka directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/rc.d/init.d/kafka
+    - /opt/kafka_{{ kafka_version }}
+    - /etc/security/limits.d/99-kafka-nproc.conf
